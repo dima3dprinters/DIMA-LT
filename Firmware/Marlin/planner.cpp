@@ -57,6 +57,7 @@
 #include "temperature.h"
 #include "ultralcd.h"
 #include "language.h"
+#include "Hysteresis.h"
 
 //===========================================================================
 //=============================public variables ============================
@@ -140,6 +141,26 @@ static int8_t prev_block_index(int8_t block_index) {
 //===========================================================================
 //=============================functions         ============================
 //===========================================================================
+
+//Changes Dryrain
+//Saves/loads position
+void copy_position( float* ret_position )
+{
+	for(int i=0;i<NUM_AXIS;++i)
+	{
+		ret_position[i] = position[i];
+	}
+}
+
+void set_position( const float* new_position )
+{
+	for(int i=0;i<NUM_AXIS;++i)
+	{
+		position[i] = new_position[i];
+	}
+}
+
+
 
 // Calculates the distance (not time) it takes to accelerate from initial_rate to target_rate using the 
 // given acceleration:
@@ -528,6 +549,13 @@ void plan_buffer_line(float x, float y, float z, const float &e, float feed_rate
 void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t &extruder)
 #endif  //ENABLE_AUTO_BED_LEVELING
 {
+  //Dryrain changes-----------------------
+  #ifdef HYSTERESIS_H
+  //Hysteresis correction if needed
+  hysteresis.InsertCorrection(x,y,z,e);
+  #endif
+  //------------------------------
+
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
 
